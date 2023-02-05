@@ -1,3 +1,6 @@
+# Test URL = http://localhost:5000/download?url=https://www.youtube.com/watch?v=bNNGaqe9VzU&list=PLrAXtmErZgOeciFP3CBCIEElOJeitOr41&ab_channel=LexClips
+
+
 # create a Flask app to download audio files from url and convert to mp3, 
 # then upload to S3 bucket (In Future)
 # add them to a queue to be processed by a worker
@@ -9,8 +12,8 @@
 import os 
 import youtube_dl
 from flask import Flask, request, jsonify
-import pymongo
-from pymongo import MongoClient
+# import pymongo
+# from pymongo import MongoClient
 import whisper
 from transformers import pipeline
 
@@ -28,7 +31,7 @@ def download():
     # get url from request
     #print("Request method: ", request.method)
     if request.method == "GET":
-        # print(request.args.get("url"))
+        print(request.args.get("url"))
         url = request.args.get("url")
         ydl_opts = {
         "outtmpl": "file.mp3",
@@ -58,8 +61,10 @@ def download():
         print("######################### Transcription completed! #####################\n")
 
         # summarize the transcription
+        with open("transcription.txt", "r") as f:
+            summar_text = f.read()
         print("###################### Summarizing transcription now ###################\n")
-        summary = summarizer(result["text"], max_length=2000, min_length=100, do_sample=False)
+        summary = summarizer(summar_text, max_length=500, min_length=100, do_sample=False)
         print(summary[0]["summary_text"])
         print("######################### Summarization completed! #####################\n")
         # save summary to a text file
@@ -70,4 +75,5 @@ def download():
 
 
 if __name__ == "__main__":
+    print("Starting server...")
     app.run(debug=True)
