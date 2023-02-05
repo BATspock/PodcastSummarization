@@ -16,6 +16,7 @@ from flask import Flask, request, jsonify
 # from pymongo import MongoClient
 import whisper
 from transformers import pipeline
+from summarize import summarizer
 
 app = Flask(__name__)
 summarizer = pipeline("summarization", model="t5-base", tokenizer="t5-base", framework="tf")
