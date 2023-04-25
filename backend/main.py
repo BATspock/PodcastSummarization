@@ -1,80 +1,46 @@
-# Test URL = http://localhost:5000/download?url=https://www.youtube.com/watch?v=bNNGaqe9VzU&list=PLrAXtmErZgOeciFP3CBCIEElOJeitOr41&ab_channel=LexClips
-
-
-# create a Flask app to download audio files from url and convert to mp3, 
-# then upload to S3 bucket (In Future)
-# add them to a queue to be processed by a worker
-# worker transcribes the audio file and saves the transcription to a database
-# worker sends a notification 
-# second worker reads the transcription and summarizes it
-# the summary is sent to the user
-
-import os 
-import youtube_dl
-from flask import Flask, request, jsonify
-# import pymongo
-# from pymongo import MongoClient
-import whisper
-from transformers import pipeline
-from summarize import summarizer
+from flask import Flask, render_template, request, redirect, url_for, flash
+from download_utils import download_audio_youtube
+from transcription_utils import transcribe
+from diarization import diarization_function
+import os
 
 app = Flask(__name__)
-summarizer = pipeline("summarization", model="t5-base", tokenizer="t5-base", framework="tf")
-model = whisper.load_model("tiny.en")
+
 
 @app.route('/', methods=["GET"])
 def index():
     return "<H1>Hello World</H1>"
 
 @app.route('/download', methods=["GET","POST"])
-
 def download():
     # get url from request
     #print("Request method: ", request.method)
     if request.method == "GET":
-        print(request.args.get("url"))
+        #print(request.args.get("url"))
         url = request.args.get("url")
-        ydl_opts = {
-        "outtmpl": "file.mp3",
-        "format": "bestaudio/best",
-        # "postprocessors": [{
-        #     "key": "FFmpegExtractAudio",
-        #     "preferredcodec": "mp3",
-        #     "preferredquality": "192",
-        #     }],
-        }
-        print("########################## Downloading audio now #####################\n")
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-        print("########################## Download completed! #####################\n")
-        # upload to S3 bucket
-        # or upload to MongoDB
-        # add to queue
-        # for implemenation later
-
-        print("######################### Transcribing audio now #####################\n")
         
-        result = model.transcribe("file.mp3", fp16=False)
-        #print(result["text"])
-        # save trascrtiption to a text file
-        with open("transcription.txt", "w") as f:
-            f.write(result["text"])
-        print("######################### Transcription completed! #####################\n")
+        download_audio_youtube(url)
+        
+        # transcribe the audio in audio folder
+        file = os.listdir("audio")[0]
+        transcription = transcribe("audio/"+file)
 
-        # summarize the transcription
-        with open("transcription.txt", "r") as f:
-            summar_text = f.read()
-        print("###################### Summarizing transcription now ###################\n")
-        summary = summarizer(summar_text, max_length=500, min_length=100, do_sample=False)
-        print(summary[0]["summary_text"])
-        print("######################### Summarization completed! #####################\n")
-        # save summary to a text file
-        with open("summary.txt", "w") as f:
-            f.write(summary[0]["summary_text"])
+        # save transcription in a text file in transcrtiptions folder
+        # check if transcription folder exists
+        if not os.path.exists("transcriptions"):
+            os.mkdir("transcriptions")
 
-    return jsonify({"message": "success"})
+        # save the transcription in a text file
+        # remove the extension from the file name
+        file = file.split(".")[0]
+        with open("transcriptions/"+file+".txt", "w") as f:
+            f.write(transcription)
+        
+        # diarize the audio file
+        diarization_function("audio/"+file+".mp3")
+
+    return "<H1>Downloading</H1>"
 
 
-if __name__ == "__main__":
-    print("Starting server...")
+if __name__ == '__main__':
     app.run(debug=True)
