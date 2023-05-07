@@ -6,9 +6,10 @@ import torch
 from pyannote.audio import Pipeline
 import timeit
 import os
-from pydub import AudioSegment
+# from pydub import AudioSegment
 import sys
 import pandas as pd
+import subprocess
 
 
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1",
@@ -41,8 +42,9 @@ def convert_rttm_to_csv(file):
 
 
 def convertmp3towav(src, dst):
-    sound = AudioSegment.from_mp3(src)
-    sound.export(dst, format="wav")
+    # sound = AudioSegment.from_mp3(src)
+    # sound.export(dst, format="wav")
+    subprocess.call(['ffmpeg', '-i', src, dst])
 
 
 def diarize_audio(audio_file_path, min_speakers=2, max_speakers=5):

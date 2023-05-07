@@ -1,20 +1,29 @@
-from pytube import YouTube
+# from pytube import YouTube
 import os
+import yt_dlp as youtube_dl
 
+def download_audio_youtube(video_url)->None:
+    # create the directory if it doesn't exist
+    if not os.path.exists('audio'):
+        os.makedirs('audio')
 
-def download_audio_youtube(url)->None:
-    yt = YouTube(url)
-    audio = yt.streams.filter(only_audio=True).first()
-    destination = os.path.join(os.getcwd(), "audio")
-    out_file = audio.download(output_path=destination)
+    # set options for the downloader
+    options = {
+        'format': 'bestaudio/best',
+        'extractaudio': True,
+        'audioformat': 'mp3',
+        'outtmpl': 'audio/audio_clip.mp3',
+        'noplaylist': True,
+        'verbose': True
+    }
 
-    base, ext = os.path.splitext(out_file)
-    new_file = base + '.mp3'
-    os.rename(out_file, new_file)
-
-    print("Downloaded: ", new_file)
-# Example usage: download_audio("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    # create a downloader instance
+    with youtube_dl.YoutubeDL(options) as downloader:
+        try:
+            downloader.extract_info(video_url)
+        except youtube_dl.utils.ExtractorError as e:
+            print(f"Error: {e}")
 
 
 if __name__ == '__main__':
-    download_audio_youtube("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    download_audio_youtube("https://www.youtube.com/watch?v=bNNGaqe9VzU&list=PLrAXtmErZgOeciFP3CBCIEElOJeitOr41")

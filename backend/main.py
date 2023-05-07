@@ -1,8 +1,11 @@
+# http://localhost:5000/download?url=https://www.youtube.com/watch?v=bNNGaqe9VzU&list=PLrAXtmErZgOeciFP3CBCIEElOJeitOr41
+
 from flask import Flask, render_template, request, redirect, url_for, flash
 from download_utils import download_audio_youtube
 from transcription_utils import transcribe
 from diarization import diarization_function
 import os
+import timeit
 
 app = Flask(__name__)
 
@@ -18,7 +21,7 @@ def download():
     if request.method == "GET":
         #print(request.args.get("url"))
         url = request.args.get("url")
-        
+        start_time  = timeit.default_timer()
         download_audio_youtube(url)
         
         # transcribe the audio in audio folder
@@ -38,8 +41,8 @@ def download():
         
         # diarize the audio file
         diarization_function("audio/"+file+".mp3")
-
-    return "<H1>Downloading</H1>"
+        print("Time taken to process the audio file:", timeit.default_timer()-start_time)
+    return "<H1>Time taken to process the audio file: "+str(timeit.default_timer()-start_time)+"</H1>"
 
 
 if __name__ == '__main__':
