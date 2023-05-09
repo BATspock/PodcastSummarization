@@ -24,14 +24,10 @@ def download():
         start_time  = timeit.default_timer()
         download_audio_youtube(url)
         
+        print("Starting transcription..........")
         # transcribe the audio in audio folder
         file = os.listdir("audio")[0]
         transcription = transcribe("audio/"+file)
-
-        # save transcription in a text file in transcrtiptions folder
-        # check if transcription folder exists
-        if not os.path.exists("transcriptions"):
-            os.mkdir("transcriptions")
 
         # save the transcription in a text file
         # remove the extension from the file name
@@ -39,8 +35,10 @@ def download():
         with open("transcriptions/"+file+".txt", "w") as f:
             f.write(transcription)
         
+        print("Starting diarization..........")
         # diarize the audio file
         diarization_function("audio/"+file+".mp3")
+
         print("Time taken to process the audio file:", timeit.default_timer()-start_time)
     return "<H1>Time taken to process the audio file: "+str(timeit.default_timer()-start_time)+"</H1>"
 
