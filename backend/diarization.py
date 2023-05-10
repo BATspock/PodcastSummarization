@@ -3,6 +3,8 @@ from pydub import AudioSegment
 
 from transcription_utils import transcribe
 
+def break_audio(audio_path)->any:
+    pass
 
 def diarization_function(audio)->any:
     """
