@@ -5,50 +5,43 @@
 # subprocess.call(['ffmpeg', '-i', 'audio/WW2 vs War in Ukraine.mp3',
 #                  'converted_to_wav_file.wav'])
 
-from pyAudioAnalysis import audioBasicIO, audioSegmentation
-from pyAudioAnalysis import ShortTermFeatures
-from sklearn.cluster import KMeans
-import numpy as np
+import whisperx
+import gc 
 
-# Specify the path to your audio file
+device = "cuda" 
 audio_file = "audio_wav/audio_clip.wav"
+batch_size = 16 # reduce if low on GPU mem
+compute_type = "float16" # change to "int8" if low on GPU mem (may reduce accuracy)
 
-# Load the audio file
-[signal, sample_rate] = audioBasicIO.read_audio_file(audio_file)
+# 1. Transcribe with original whisper (batched)
+model = whisperx.load_model("base.en", device, compute_type=compute_type)
 
-# Specify the short-term analysis parameters
-st_win = 0.05  # Window size in seconds
-st_step = 0.025  # Step size in seconds
+audio = whisperx.load_audio(audio_file)
+result = model.transcribe(audio, batch_size=batch_size)
+print(result["segments"]) # before alignment
 
-# Perform voice activity detection (VAD)
-segments = audioSegmentation.silence_removal(signal, sample_rate, st_win, st_step)
+# delete model if low on GPU resources
+# import gc; gc.collect(); torch.cuda.empty_cache(); del model
 
-# Specify the desired features
-feature_type = ShortTermFeatures.MFCC
+# 2. Align whisper output
+model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
+result = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=False)
 
-# Extract features for each segment
-features = []
-for segment in segments:
-    start_time, end_time = segment
-    segment_signal = signal[int(start_time * sample_rate):int(end_time * sample_rate)]
-    segment_features, _ = ShortTermFeatures.feature_extraction(segment_signal, sample_rate, feature_type)
-    features.append(segment_features.T)  # Transpose the feature matrix
+print(result["segments"]) # after alignment
 
-# Combine feature matrices into a single numpy array
-all_features = np.concatenate(features)
+# delete model if low on GPU resources
+# import gc; gc.collect(); torch.cuda.empty_cache(); del model_a
 
-# Specify the desired number of speakers
-num_speakers = 2
+# 3. Assign speaker labels
+diarize_model = whisperx.DiarizationPipeline(use_auth_token="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", device=device)
 
-# Perform clustering on the feature vectors
-kmeans = KMeans(n_clusters=num_speakers)
-cluster_labels = kmeans.fit_predict(all_features)
+# add min/max number of speakers if known
+diarize_segments = diarize_model(audio_file)
+# diarize_model(audio_file, min_speakers=min_speakers, max_speakers=max_speakers)
 
-# Print the speaker segments and corresponding labels
-for i, segment in enumerate(segments):
-    start_time, end_time = segment
-    label = cluster_labels[i]
-    print(f"Segment: {i+1} - Speaker: {label} - Start: {start_time:.2f}s, End: {end_time:.2f}s")
+result = whisperx.assign_word_speakers(diarize_segments, result)
+print(diarize_segments)
+print(result["segments"]) # segments are now assigned speaker IDs
 
 
 
