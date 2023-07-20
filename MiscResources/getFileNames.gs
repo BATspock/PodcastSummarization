@@ -40,3 +40,4 @@ function listAllFolderContents() {
   }
 }
 
+// Some links changed to private
