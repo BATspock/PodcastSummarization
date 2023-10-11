@@ -8,7 +8,7 @@ import pandas as pd
 
 #Set API key - Need to do it from environment
 #ai.api_key = os.environ['OPENAI_API_KEY']
-ai.api_key = "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"
+ai.api_key = os.getenv('OPENAI_API_KEY')
 
 #Function to generate subtitle topic from text chunk
 def generate_subtitle_topic(text_chunk: str)-> str:

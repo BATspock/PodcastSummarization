@@ -13,7 +13,7 @@ import subprocess
 
 
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1",
-                                    use_auth_token="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")
+                                    use_auth_token=os.getenv("HUGGINGFACE_TOKEN"))
 
 
 def convert_rttm_to_csv(file):

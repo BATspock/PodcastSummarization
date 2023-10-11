@@ -2,7 +2,7 @@
 # 2. visit hf.co/settings/tokens to create an access token (only if you had to go through 1.)
 # 3. instantiate pretrained speaker diarization pipeline
 from pyannote.audio import Pipeline
-pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization",
+pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1",
                                     use_auth_token="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")
 
 # 4. apply pretrained pipeline

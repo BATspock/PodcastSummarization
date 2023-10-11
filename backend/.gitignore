@@ -5,3 +5,4 @@ Final_tsv
 transcriptions
 test_clip.wav
 __pycache__
+.env
