@@ -5,18 +5,12 @@ from flask import Flask, render_template, request, jsonify
 from download_utils import download_audio_youtube
 from transcription_utils import transcribe
 from diarization import diarization_function, tsv_to_json
+from mongo import MongoDBClient
 import os
 import timeit
-from pymongo import MongoClient
-import gridfs
+
 
 app = Flask(__name__)
-
-# Connect to MongoDB
-client = MongoClient('mongodb://localhost:27017/')
-db = client['transcriptions_db']  # Use or create a database for transcriptions
-transcriptions_collection = db['transcriptions']  # Use or create a collection for storing transcriptions
-
 
 @app.route('/', methods=["GET"])
 def index():
@@ -35,11 +29,25 @@ def transcribe_audio():
         print("Starting transcription..........")
         # transcribe the audio in audio folder
         file_name = os.listdir("audio")[0]
-        transription = transcribe("audio/"+file_name)
+        transcription = transcribe("audio/"+file_name)
         
         print("Transcription completed..........")
-        print("Time taken to process the audio file:", timeit.default_timer()-start_time)
-    return jsonify({"transcription":transription})
+        elapsed_time = timeit.default_timer()-start_time
+        print("Time taken to process the audio file:", elapsed_time)
+
+        mongoDBclient = MongoDBClient()
+        # Prepare the document to be inserted
+        document = {
+            "url": url,
+            "file_name": file_name,
+            "transcription": transcription,
+            "processing_time": elapsed_time
+        }
+        
+        # Insert the document into MongoDB
+        mongoDBclient.add_transcription(document)
+
+    return jsonify({"transcription":transcription})
 
 @app.route('/diarize', methods=["GET","POST"])
 def diarize_audio():
