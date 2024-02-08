@@ -7,9 +7,15 @@ from transcription_utils import transcribe
 from diarization import diarization_function, tsv_to_json
 import os
 import timeit
-import json
+from pymongo import MongoClient
+import gridfs
 
 app = Flask(__name__)
+
+# Connect to MongoDB
+client = MongoClient('mongodb://localhost:27017/')
+db = client['transcriptions_db']  # Use or create a database for transcriptions
+transcriptions_collection = db['transcriptions']  # Use or create a collection for storing transcriptions
 
 
 @app.route('/', methods=["GET"])
