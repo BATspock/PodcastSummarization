@@ -18,4 +18,6 @@ def transcribe(audio, model="base")->any:
     # write the transcription_text to a file in transcriptions folder
     with open("transcriptions/"+file_name.split(".")[0]+".txt", "w") as f:
         f.write(transcription_text)
+    # remove the audio file
+    os.remove(audio)
     return transcription_text

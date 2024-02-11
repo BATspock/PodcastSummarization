@@ -11,3 +11,6 @@ class MongoDBClient:
 
     def add_transcription(self, document):
         self.transcriptions_collection.insert_one(document)
+
+    def display_last_record(self):
+        return next(self.transcriptions_collection.find().sort([('_id', -1)]).limit(1), None)

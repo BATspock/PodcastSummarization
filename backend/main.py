@@ -1,5 +1,6 @@
-# http://127.0.0.1:5000/diarize?url=https://www.youtube.com/watch?v=cjwpxzXlpC8&ab_channel=LexClips
+# http://127.0.0.1:5000/diarize?url=https://www.youtube.com/watch?v=cjwpxzXlpC8&ab_channel=LexClips (do not use diarization path)
 # http://127.0.0.1:5000/transcribe?url=https://www.youtube.com/watch?v=cjwpxzXlpC8&ab_channel=LexClips
+# http://127.0.0.1:5000/transcribe?url=https://www.youtube.com/watch?v=XpC7SVDXimg&ab_channel=LexFridman
 
 from flask import Flask, render_template, request, jsonify
 from download_utils import download_audio_youtube
@@ -46,6 +47,8 @@ def transcribe_audio():
         
         # Insert the document into MongoDB
         mongoDBclient.add_transcription(document)
+        print("Document inserted into MongoDB..........")
+        print(mongoDBclient.display_last_record())
 
     return jsonify({"transcription":transcription})
 

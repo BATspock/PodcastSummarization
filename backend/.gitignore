@@ -4,5 +4,5 @@ diarized_audio
 Final_tsv
 transcriptions
 test_clip.wav
-__pycache__
+__pycache__/*
 .env
